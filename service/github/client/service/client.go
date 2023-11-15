@@ -39,7 +39,7 @@ func (s *Service) checkToken() error {
 	return nil
 }
 
-func (s *Service) GetInstallationsForApp() ([]models.AppInstallation, error) {
+func (s *Service) GetInstallationsForApp() ([]models.Installation, error) {
 	if err := s.checkToken(); err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (s *Service) GetInstallationsForApp() ([]models.AppInstallation, error) {
 		return nil, err
 	}
 
-	var installations []models.AppInstallation
+	var installations []models.Installation
 	if err := json.Unmarshal(bytes, &installations); err != nil {
 		return nil, err
 	}

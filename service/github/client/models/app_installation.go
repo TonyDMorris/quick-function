@@ -1,6 +1,6 @@
 package models
 
-type AppInstallation struct {
+type Installation struct {
 	ID                     int         `json:"id"`
 	Account                Account     `json:"account"`
 	AccessTokensURL        string      `json:"access_tokens_url"`
@@ -42,7 +42,9 @@ type Account struct {
 	SiteAdmin         bool   `json:"site_admin"`
 }
 type Permissions struct {
-	Checks   string `json:"checks"`
-	Metadata string `json:"metadata"`
-	Contents string `json:"contents"`
+	Checks          string `json:"checks"`
+	Metadata        string `json:"metadata"`
+	Contents        string `json:"contents"`
+	PullRequests    string `json:"pull_requests"`
+	RepositoryHooks string `json:"repository_hooks"`
 }

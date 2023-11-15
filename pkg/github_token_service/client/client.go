@@ -47,16 +47,20 @@ func (t *TokenSerivce) GetToken(activeToken *string) (string, error) {
 	if activeToken == nil {
 		return t.getToken()
 	}
-	token, err := jwt.Parse(*activeToken, func(token *jwt.Token) (interface{}, error) {
-		return t.signKey, nil
+	var exp float64
+	var ok bool
+	_, _ = jwt.Parse(*activeToken, func(token *jwt.Token) (interface{}, error) {
+		exp, ok = token.Claims.(jwt.MapClaims)["exp"].(float64)
+
+		return "", nil
 	})
-	if err != nil {
-		return "", err
+
+	if !ok {
+		return "", fmt.Errorf("error parsing token claims")
 	}
-	exp := token.Claims.(jwt.MapClaims)["exp"].(int)
-	// 2 minutes before expiration
 	if time.Now().Unix()+2*60 > int64(exp) {
 		return t.getToken()
 	}
+
 	return *activeToken, nil
 }

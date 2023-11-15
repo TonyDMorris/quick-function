@@ -1,7 +1,10 @@
 package main
 
 import (
+	"os"
+
 	tokenservice "github.com/TonyDMorris/quick-function/pkg/github_token_service/client"
+	"github.com/TonyDMorris/quick-function/service/app"
 	"github.com/TonyDMorris/quick-function/service/github/client/service"
 	"github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
@@ -34,10 +37,13 @@ func main() {
 
 	gitService := service.NewService(tokenService)
 
-	installations, err := gitService.GetInstallationsForApp()
-	if err != nil {
-		panic(err)
+	app := app.NewApi(app.Config{
+		Port: 8080,
+	}, gitService)
+
+	if err := app.Run(); err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
 	}
 
-	log.Info("Installations", zap.Any("installations", installations))
 }
