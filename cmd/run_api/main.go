@@ -1,48 +1,54 @@
 package main
 
 import (
+	"net/http"
 	"os"
 
-	tokenservice "github.com/TonyDMorris/quick-function/pkg/github_token_service/client"
+	"github.com/TonyDMorris/quick-function/pkg/logging"
 	"github.com/TonyDMorris/quick-function/service/app"
-	"github.com/TonyDMorris/quick-function/service/github/client/service"
+	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/caarlos0/env/v10"
+	"github.com/golang-jwt/jwt"
+	"github.com/google/go-github/v56/github"
 	"github.com/joho/godotenv"
-
-	"go.uber.org/zap"
 )
 
 type Config struct {
 	RSA   string `env:"RSA"`
-	AppID int    `env:"GITHUB_APP_ID"`
+	AppID int64  `env:"GITHUB_APP_ID"`
 }
 
 func main() {
 
 	var config Config
-	log, err := zap.NewProduction()
+
+	err := godotenv.Load("../../.env")
 	if err != nil {
-		panic(err)
-	}
-	err = godotenv.Load("../../.env")
-	if err != nil {
-		log.Info(err.Error())
+		logging.Logger.Info(err.Error())
 	}
 	err = env.Parse(&config)
 	if err != nil {
 		panic(err)
 	}
 
-	tokenService := tokenservice.NewTokenSerivce([]byte(config.RSA), config.AppID)
+	key, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(config.RSA))
+	if err != nil {
+		panic(err)
+	}
 
-	gitService := service.NewService(tokenService)
+	itr := ghinstallation.NewAppsTransportFromPrivateKey(http.DefaultTransport, config.AppID, key)
+
+	client := github.NewClient(&http.Client{
+		Transport: itr,
+	})
 
 	app := app.NewApi(app.Config{
 		Port: 8080,
-	}, gitService)
+	},
+		client)
 
 	if err := app.Run(); err != nil {
-		log.Error(err.Error())
+		logging.Logger.Error(err.Error())
 		os.Exit(1)
 	}
 
