@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "git_blog_posts",
+  "info": {
+    "singularName": "git-blog-post",
+    "pluralName": "git-blog-posts",
+    "displayName": "git-blog-post",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "body_blocks": {
+      "type": "blocks"
+    },
+    "body": {
+      "type": "richtext"
+    },
+    "additional_data": {
+      "type": "json"
+    },
+    "commit_from": {
+      "type": "datetime"
+    },
+    "commit_to": {
+      "type": "datetime"
+    },
+    "repository": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::repository.repository",
+      "inversedBy": "git_blog_posts"
+    }
+  }
+}

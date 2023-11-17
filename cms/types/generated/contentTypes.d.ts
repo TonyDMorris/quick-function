@@ -362,12 +362,12 @@ export interface AdminTransferTokenPermission extends Schema.CollectionType {
   };
 }
 
-export interface ApiBlogPostBlogPost extends Schema.CollectionType {
-  collectionName: 'blog_posts';
+export interface ApiGitBlogPostGitBlogPost extends Schema.CollectionType {
+  collectionName: 'git_blog_posts';
   info: {
-    singularName: 'blog-post';
-    pluralName: 'blog-posts';
-    displayName: 'blog post';
+    singularName: 'git-blog-post';
+    pluralName: 'git-blog-posts';
+    displayName: 'git-blog-post';
     description: '';
   };
   options: {
@@ -375,23 +375,69 @@ export interface ApiBlogPostBlogPost extends Schema.CollectionType {
   };
   attributes: {
     title: Attribute.String;
+    body_blocks: Attribute.Blocks;
     body: Attribute.RichText;
-    blocks_body: Attribute.Blocks;
-    published: Attribute.Boolean;
-    commit_from: Attribute.String;
-    commit_to: Attribute.String;
-    repository: Attribute.String;
+    additional_data: Attribute.JSON;
+    commit_from: Attribute.DateTime;
+    commit_to: Attribute.DateTime;
+    repository: Attribute.Relation<
+      'api::git-blog-post.git-blog-post',
+      'manyToOne',
+      'api::repository.repository'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
-      'api::blog-post.blog-post',
+      'api::git-blog-post.git-blog-post',
       'oneToOne',
       'admin::user'
     > &
       Attribute.Private;
     updatedBy: Attribute.Relation<
-      'api::blog-post.blog-post',
+      'api::git-blog-post.git-blog-post',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiRepositoryRepository extends Schema.CollectionType {
+  collectionName: 'repositories';
+  info: {
+    singularName: 'repository';
+    pluralName: 'repositories';
+    displayName: 'repository';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    repository_url: Attribute.UID;
+    name: Attribute.String;
+    git_blog_posts: Attribute.Relation<
+      'api::repository.repository',
+      'oneToMany',
+      'api::git-blog-post.git-blog-post'
+    >;
+    user: Attribute.Relation<
+      'api::repository.repository',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::repository.repository',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::repository.repository',
       'oneToOne',
       'admin::user'
     > &
@@ -624,7 +670,6 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
   };
   options: {
     draftAndPublish: false;
-    timestamps: true;
   };
   attributes: {
     username: Attribute.String &
@@ -652,6 +697,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'plugin::users-permissions.user',
       'manyToOne',
       'plugin::users-permissions.role'
+    >;
+    repositories: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::repository.repository'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -724,7 +774,8 @@ declare module '@strapi/types' {
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
-      'api::blog-post.blog-post': ApiBlogPostBlogPost;
+      'api::git-blog-post.git-blog-post': ApiGitBlogPostGitBlogPost;
+      'api::repository.repository': ApiRepositoryRepository;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
