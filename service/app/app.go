@@ -2,8 +2,10 @@ package app
 
 import (
 	"database/sql"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v56/github"
@@ -39,6 +41,40 @@ func (a *App) Run() error {
 func (a *App) SetupRoutes() {
 
 	a.server.POST("/test", a.Test)
+	a.server.POST("/test2", a.Test2)
+
+}
+
+var num = 1
+
+func (a *App) Test2(c *gin.Context) {
+	body, _ := io.ReadAll(c.Request.Body)
+	path := c.Request.URL.Path
+	query := c.Request.URL.Query()
+	newBody := make(map[string]interface{})
+	newBody["body"] = string(body)
+	newBody["path"] = path
+	newBody["query"] = query
+
+	fileName := fmt.Sprintf("%d.json", num)
+	num++
+	file, err := os.Create(fileName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	defer file.Close()
+
+	_, err = file.Write(body)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
 }
 

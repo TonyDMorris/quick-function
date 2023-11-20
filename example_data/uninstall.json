@@ -1,0 +1,91 @@
+{
+  "action": "deleted",
+  "installation": {
+    "id": 44043410,
+    "account": {
+      "login": "TonyDMorris",
+      "id": 40209459,
+      "node_id": "MDQ6VXNlcjQwMjA5NDU5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/40209459?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TonyDMorris",
+      "html_url": "https://github.com/TonyDMorris",
+      "followers_url": "https://api.github.com/users/TonyDMorris/followers",
+      "following_url": "https://api.github.com/users/TonyDMorris/following{/other_user}",
+      "gists_url": "https://api.github.com/users/TonyDMorris/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/TonyDMorris/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/TonyDMorris/subscriptions",
+      "organizations_url": "https://api.github.com/users/TonyDMorris/orgs",
+      "repos_url": "https://api.github.com/users/TonyDMorris/repos",
+      "events_url": "https://api.github.com/users/TonyDMorris/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/TonyDMorris/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "repository_selection": "selected",
+    "access_tokens_url": "https://api.github.com/app/installations/44043410/access_tokens",
+    "repositories_url": "https://api.github.com/installation/repositories",
+    "html_url": "https://github.com/settings/installations/44043410",
+    "app_id": 467659,
+    "app_slug": "git-history-blog",
+    "target_id": 40209459,
+    "target_type": "User",
+    "permissions": {
+      "contents": "read",
+      "metadata": "read",
+      "pull_requests": "read",
+      "repository_hooks": "write"
+    },
+    "events": [],
+    "created_at": "2023-11-15T11:28:16.000Z",
+    "updated_at": "2023-11-15T22:07:20.000Z",
+    "single_file_name": null,
+    "has_multiple_single_files": false,
+    "single_file_paths": [],
+    "suspended_by": null,
+    "suspended_at": null
+  },
+  "repositories": [
+    {
+      "id": 178613296,
+      "node_id": "MDEwOlJlcG9zaXRvcnkxNzg2MTMyOTY=",
+      "name": "bio",
+      "full_name": "TonyDMorris/bio",
+      "private": false
+    },
+    {
+      "id": 470178504,
+      "node_id": "R_kgDOHAZayA",
+      "name": "avalanche-smart-contract-quickstart",
+      "full_name": "TonyDMorris/avalanche-smart-contract-quickstart",
+      "private": false
+    },
+    {
+      "id": 718219828,
+      "node_id": "R_kgDOKs8qNA",
+      "name": "quick-function",
+      "full_name": "TonyDMorris/quick-function",
+      "private": false
+    }
+  ],
+  "sender": {
+    "login": "TonyDMorris",
+    "id": 40209459,
+    "node_id": "MDQ6VXNlcjQwMjA5NDU5",
+    "avatar_url": "https://avatars.githubusercontent.com/u/40209459?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/TonyDMorris",
+    "html_url": "https://github.com/TonyDMorris",
+    "followers_url": "https://api.github.com/users/TonyDMorris/followers",
+    "following_url": "https://api.github.com/users/TonyDMorris/following{/other_user}",
+    "gists_url": "https://api.github.com/users/TonyDMorris/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/TonyDMorris/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/TonyDMorris/subscriptions",
+    "organizations_url": "https://api.github.com/users/TonyDMorris/orgs",
+    "repos_url": "https://api.github.com/users/TonyDMorris/repos",
+    "events_url": "https://api.github.com/users/TonyDMorris/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/TonyDMorris/received_events",
+    "type": "User",
+    "site_admin": false
+  }
+}

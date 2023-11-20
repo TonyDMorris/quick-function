@@ -1,2 +1,4 @@
 secrets
 .env
+node_modules
+k8s
