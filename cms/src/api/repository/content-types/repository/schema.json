@@ -12,9 +12,6 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "repository_url": {
-      "type": "uid"
-    },
     "name": {
       "type": "string"
     },
@@ -24,11 +21,15 @@
       "target": "api::git-blog-post.git-blog-post",
       "mappedBy": "repository"
     },
-    "user": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "repositories"
+    "full_name": {
+      "type": "string"
+    },
+    "private": {
+      "type": "boolean"
+    },
+    "repository_id": {
+      "type": "uid",
+      "required": true
     }
   }
 }

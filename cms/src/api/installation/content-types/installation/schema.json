@@ -1,0 +1,29 @@
+{
+  "kind": "collectionType",
+  "collectionName": "installations",
+  "info": {
+    "singularName": "installation",
+    "pluralName": "installations",
+    "displayName": "installation"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "installation_id": {
+      "type": "uid",
+      "required": true
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "repositories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::repository.repository"
+    }
+  }
+}

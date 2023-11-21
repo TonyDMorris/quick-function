@@ -403,6 +403,46 @@ export interface ApiGitBlogPostGitBlogPost extends Schema.CollectionType {
   };
 }
 
+export interface ApiInstallationInstallation extends Schema.CollectionType {
+  collectionName: 'installations';
+  info: {
+    singularName: 'installation';
+    pluralName: 'installations';
+    displayName: 'installation';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    installation_id: Attribute.UID & Attribute.Required;
+    users_permissions_user: Attribute.Relation<
+      'api::installation.installation',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    repositories: Attribute.Relation<
+      'api::installation.installation',
+      'oneToMany',
+      'api::repository.repository'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::installation.installation',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::installation.installation',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiRepositoryRepository extends Schema.CollectionType {
   collectionName: 'repositories';
   info: {
@@ -415,18 +455,15 @@ export interface ApiRepositoryRepository extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    repository_url: Attribute.UID;
     name: Attribute.String;
     git_blog_posts: Attribute.Relation<
       'api::repository.repository',
       'oneToMany',
       'api::git-blog-post.git-blog-post'
     >;
-    user: Attribute.Relation<
-      'api::repository.repository',
-      'manyToOne',
-      'plugin::users-permissions.user'
-    >;
+    full_name: Attribute.String;
+    private: Attribute.Boolean;
+    repository_id: Attribute.UID & Attribute.Required;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -698,11 +735,6 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'manyToOne',
       'plugin::users-permissions.role'
     >;
-    repositories: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'oneToMany',
-      'api::repository.repository'
-    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -775,6 +807,7 @@ declare module '@strapi/types' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'api::git-blog-post.git-blog-post': ApiGitBlogPostGitBlogPost;
+      'api::installation.installation': ApiInstallationInstallation;
       'api::repository.repository': ApiRepositoryRepository;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
