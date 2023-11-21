@@ -409,22 +409,19 @@ export interface ApiInstallationInstallation extends Schema.CollectionType {
     singularName: 'installation';
     pluralName: 'installations';
     displayName: 'installation';
+    description: '';
   };
   options: {
     draftAndPublish: true;
   };
   attributes: {
     installation_id: Attribute.UID & Attribute.Required;
-    users_permissions_user: Attribute.Relation<
-      'api::installation.installation',
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
     repositories: Attribute.Relation<
       'api::installation.installation',
       'oneToMany',
       'api::repository.repository'
     >;
+    username: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
