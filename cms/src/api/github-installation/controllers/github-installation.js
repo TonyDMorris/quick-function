@@ -17,7 +17,7 @@ module.exports = {
         return await installationDeleteHandler(ctx.request.body, next);
 
       case "added":
-        break;
+        return await installationAddHandler(ctx.request.body, next);
 
       case "removed":
         return await installationRemoveHandler(ctx.request.body, next);
@@ -25,9 +25,148 @@ module.exports = {
   },
 };
 
-const installationAddHandler = async (body, next) => {};
+const installationAddHandler = async (body, next) => {
+  const { installation, repositories_added } = body;
 
-const installationRemoveHandler = async (body, next) => {};
+  const { id, account } = installation;
+  try {
+    const existingRepositories = await strapi.entityService.findMany(
+      "api::repository.repository",
+      {
+        filters: {
+          full_name: { $in: repositories_added.map((repo) => repo.full_name) },
+        },
+      }
+    );
+
+    const newRepositories = repositories_added.filter((repo) => {
+      return !existingRepositories.find(
+        (existingRepo) => existingRepo.full_name === repo.full_name
+      );
+    });
+
+    const newRepositoryEntities = newRepositories.map((repo) => {
+      return {
+        full_name: repo.full_name,
+        name: repo.name,
+        private: repo.private,
+        repository_id: repo.id.toString(),
+      };
+    });
+    const repoIDs = existingRepositories.map((repo) => repo.id);
+    for (const entity of newRepositoryEntities) {
+      const repo = await strapi.entityService.create(
+        "api::repository.repository",
+        { data: entity }
+      );
+      repoIDs.push(repo.id);
+    }
+
+    const existingInstallation = await strapi.entityService.findMany(
+      "api::installation.installation",
+      {
+        filters: {
+          installation_id: id.toString(),
+        },
+        populate: ["repositories"],
+      }
+    );
+
+    if (existingInstallation.length === 0) {
+      const installationEntity = await strapi.entityService.create(
+        "api::installation.installation",
+        {
+          data: {
+            username: account.login,
+            installation_id: id.toString(),
+            repositories: repoIDs,
+          },
+        }
+      );
+    } else {
+      const installationEntity = existingInstallation[0];
+      const newRepoIDs = [
+        ...installationEntity.repositories
+          .map((repo) => repo.id)
+          .filter((id) => {
+            return !repoIDs.includes(id);
+          }),
+        ...repoIDs,
+      ];
+      await strapi.entityService.update(
+        "api::installation.installation",
+        installationEntity.id,
+        {
+          data: {
+            repositories: newRepoIDs,
+          },
+        }
+      );
+    }
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+
+  return { success: true };
+};
+
+const installationRemoveHandler = async (body, next) => {
+  const { installation, repositories_removed } = body;
+
+  const { id, account } = installation;
+  try {
+    const existingRepositories = await strapi.entityService.findMany(
+      "api::repository.repository",
+      {
+        filters: {
+          full_name: {
+            $in: repositories_removed.map((repo) => repo.full_name),
+          },
+        },
+      }
+    );
+
+    const existingRepositoryIDs = existingRepositories.map((repo) => repo.id);
+
+    const existingInstallation = await strapi.entityService.findMany(
+      "api::installation.installation",
+      {
+        filters: {
+          installation_id: id.toString(),
+        },
+        populate: ["repositories"],
+      }
+    );
+
+    if (existingInstallation.length === 0) {
+      return { success: true };
+    } else {
+      const installationEntity = existingInstallation[0];
+      const newRepoIDs = [
+        ...installationEntity.repositories
+          .map((repo) => repo.id)
+          .filter((id) => {
+            return !existingRepositoryIDs.includes(id);
+          }),
+      ];
+      await strapi.entityService.update(
+        "api::installation.installation",
+        installationEntity.id,
+        {
+          data: {
+            repositories: newRepoIDs,
+          },
+        }
+      );
+    }
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+
+  return { success: true };
+};
 
 const installationCreateHandler = async (body, next) => {
   const { installation, repositories } = body;
