@@ -9,9 +9,7 @@ RUN yarn install --network-timeout 1000000000
 
 COPY . .
 
-ENV NODE_ENV production
-
-RUN yarn build
+RUN yarn build 
 
 EXPOSE 1337
 

@@ -5,10 +5,39 @@
  */
 
 const { entityService } = require("@strapi/strapi").factories;
+const crypto = require("crypto");
+
+const secret = process.env.GITHUB_WEBHOOK_SECRET;
+
+// For these headers, a sigHashAlg of sha1 must be used instead of sha256
+// GitHub: X-Hub-Signature
+// Gogs:   X-Gogs-Signature
+const sigHeaderName = "x-hub-signature";
+const sigHashAlg = "sha1";
 
 module.exports = {
   handleInstallationWebhook: async (ctx, next) => {
-    console.log(ctx.request.body);
+    const data = JSON.stringify(ctx.request.body);
+    const headerData = JSON.stringify(ctx.request.headers);
+
+    const header = ctx.request.headers[sigHeaderName] || "";
+
+    const sig = Buffer.from(header, "utf8");
+
+    const hmac = crypto.createHmac(sigHashAlg, secret);
+
+    const digest = Buffer.from(
+      `${sigHashAlg}=${hmac.update(data).digest("hex")}`,
+      "utf8"
+    );
+
+    if (sig.length !== digest.length || !crypto.timingSafeEqual(digest, sig)) {
+      strapi.log.debug(
+        `Request body digest (${digest}) did not match ${sigHeaderName} (${sig})`
+      );
+      return ctx.throw(403, "Invalid signature");
+    }
+    strapi.log.debug(ctx.request.body);
     switch (ctx.request.body.action) {
       case "created":
         return await installationCreateHandler(ctx.request.body, next);

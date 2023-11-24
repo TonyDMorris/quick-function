@@ -371,7 +371,7 @@ export interface ApiGitBlogPostGitBlogPost extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     title: Attribute.String;
@@ -387,7 +387,6 @@ export interface ApiGitBlogPostGitBlogPost extends Schema.CollectionType {
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::git-blog-post.git-blog-post',
       'oneToOne',
@@ -412,7 +411,7 @@ export interface ApiInstallationInstallation extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     installation_id: Attribute.UID & Attribute.Required;
@@ -424,7 +423,6 @@ export interface ApiInstallationInstallation extends Schema.CollectionType {
     username: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::installation.installation',
       'oneToOne',
@@ -449,7 +447,7 @@ export interface ApiRepositoryRepository extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     name: Attribute.String;
@@ -463,7 +461,6 @@ export interface ApiRepositoryRepository extends Schema.CollectionType {
     repository_id: Attribute.UID & Attribute.Required;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::repository.repository',
       'oneToOne',
