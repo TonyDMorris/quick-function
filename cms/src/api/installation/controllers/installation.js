@@ -19,12 +19,9 @@ module.exports = createCoreController(
         },
       };
 
-      const { data, meta } = await super.find(ctx);
+      return await super.find(ctx);
 
       // some more custom logic
-      meta.date = Date.now();
-
-      return { data, meta };
     },
   })
 );

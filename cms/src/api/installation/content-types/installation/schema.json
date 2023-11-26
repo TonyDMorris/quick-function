@@ -23,6 +23,12 @@
     },
     "username": {
       "type": "string"
+    },
+    "repository_configurations": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::repository-configuration.repository-configuration",
+      "mappedBy": "installation"
     }
   }
 }

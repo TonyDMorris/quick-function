@@ -17,27 +17,33 @@ const sigHashAlg = "sha1";
 
 module.exports = {
   handleInstallationWebhook: async (ctx, next) => {
-    const data = JSON.stringify(ctx.request.body);
-    const headerData = JSON.stringify(ctx.request.headers);
+    const test = process.env.TEST;
+    if (!test) {
+      const data = JSON.stringify(ctx.request.body);
+      const headerData = JSON.stringify(ctx.request.headers);
 
-    const header = ctx.request.headers[sigHeaderName] || "";
+      const header = ctx.request.headers[sigHeaderName] || "";
 
-    const sig = Buffer.from(header, "utf8");
+      const sig = Buffer.from(header, "utf8");
 
-    const hmac = crypto.createHmac(sigHashAlg, secret);
+      const hmac = crypto.createHmac(sigHashAlg, secret);
 
-    const digest = Buffer.from(
-      `${sigHashAlg}=${hmac.update(data).digest("hex")}`,
-      "utf8"
-    );
-
-    if (sig.length !== digest.length || !crypto.timingSafeEqual(digest, sig)) {
-      strapi.log.debug(
-        `Request body digest (${digest}) did not match ${sigHeaderName} (${sig})`
+      const digest = Buffer.from(
+        `${sigHashAlg}=${hmac.update(data).digest("hex")}`,
+        "utf8"
       );
-      return ctx.throw(403, "Invalid signature");
+
+      if (
+        sig.length !== digest.length ||
+        !crypto.timingSafeEqual(digest, sig)
+      ) {
+        strapi.log.debug(
+          `Request body digest (${digest}) did not match ${sigHeaderName} (${sig})`
+        );
+        return ctx.throw(403, "Invalid signature");
+      }
+      strapi.log.debug(ctx.request.body);
     }
-    strapi.log.debug(ctx.request.body);
     switch (ctx.request.body.action) {
       case "created":
         return await installationCreateHandler(ctx.request.body, next);

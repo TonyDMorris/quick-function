@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "repository_configurations",
+  "info": {
+    "singularName": "repository-configuration",
+    "pluralName": "repository-configurations",
+    "displayName": "repository_configuration",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "last_generation": {
+      "type": "datetime"
+    },
+    "repository": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::repository.repository"
+    },
+    "private": {
+      "type": "boolean",
+      "default": true
+    },
+    "installation": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::installation.installation",
+      "inversedBy": "repository_configurations"
+    },
+    "cron": {
+      "type": "string"
+    }
+  }
+}
