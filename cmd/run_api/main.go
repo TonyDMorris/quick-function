@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	gpt "github.com/TonyDMorris/quick-function/pkg/gpt/client"
 	"github.com/TonyDMorris/quick-function/pkg/logging"
 	"github.com/TonyDMorris/quick-function/service/app"
 	"github.com/bradleyfalzon/ghinstallation/v2"
@@ -14,8 +15,9 @@ import (
 )
 
 type Config struct {
-	RSA   string `env:"RSA"`
-	AppID int64  `env:"GITHUB_APP_ID"`
+	RSA           string `env:"RSA,required"`
+	AppID         int64  `env:"GITHUB_APP_ID,required"`
+	ChatGPTAPIKey string `env:"CHAT_GPT_API_KEY,required"`
 }
 
 func main() {
@@ -28,12 +30,14 @@ func main() {
 	}
 	err = env.Parse(&config)
 	if err != nil {
-		panic(err)
+		logging.Logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	key, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(config.RSA))
 	if err != nil {
-		panic(err)
+		logging.Logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	itr := ghinstallation.NewAppsTransportFromPrivateKey(http.DefaultTransport, config.AppID, key)
@@ -42,10 +46,14 @@ func main() {
 		Transport: itr,
 	})
 
-	app := app.NewApi(app.Config{
-		Port: 8080,
-	},
-		client)
+	gptClient := gpt.NewChatClient(config.ChatGPTAPIKey)
+
+	app := app.NewApi(
+		app.Config{
+			Port: 8080,
+		},
+		client, gptClient,
+	)
 
 	if err := app.Run(); err != nil {
 		logging.Logger.Error(err.Error())
