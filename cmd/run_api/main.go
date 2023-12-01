@@ -6,6 +6,7 @@ import (
 
 	gpt "github.com/TonyDMorris/quick-function/pkg/gpt/client"
 	"github.com/TonyDMorris/quick-function/pkg/logging"
+	strapi "github.com/TonyDMorris/quick-function/pkg/strapi/client"
 	"github.com/TonyDMorris/quick-function/service/app"
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/caarlos0/env/v10"
@@ -18,6 +19,8 @@ type Config struct {
 	RSA           string `env:"RSA,required"`
 	AppID         int64  `env:"GITHUB_APP_ID,required"`
 	ChatGPTAPIKey string `env:"CHAT_GPT_API_KEY,required"`
+	StrapiAPIKey  string `env:"STRAPI_API_KEY,required"`
+	StrapiBaseURL string `env:"STRAPI_BASE_URL,required"`
 }
 
 func main() {
@@ -48,11 +51,14 @@ func main() {
 
 	gptClient := gpt.NewChatClient(config.ChatGPTAPIKey)
 
+	strapiClient := strapi.NewClient(config.StrapiAPIKey, config.StrapiBaseURL)
+
 	app := app.NewApi(
 		app.Config{
 			Port: 8080,
 		},
 		client, gptClient,
+		strapiClient,
 	)
 
 	if err := app.Run(); err != nil {

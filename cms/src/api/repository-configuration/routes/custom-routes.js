@@ -4,7 +4,7 @@ module.exports = {
   routes: [
     {
       method: "GET",
-      path: "/internal/repository-configuration:id",
+      path: "/internal/repository-configurations/:id",
       handler: "repository-configuration.internalFind",
       config: {
         policies: [],

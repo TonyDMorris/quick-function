@@ -8,7 +8,10 @@ import (
 	"strings"
 
 	gpt "github.com/TonyDMorris/quick-function/pkg/gpt/client"
+	strapi "github.com/TonyDMorris/quick-function/pkg/strapi/client"
+	strapiModels "github.com/TonyDMorris/quick-function/pkg/strapi/models"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/google/go-github/v56/github"
 )
@@ -21,16 +24,38 @@ type App struct {
 	server        *gin.Engine
 	githubClient  *github.Client
 	chatGptClient *gpt.ChatClient
+	strapiClient  *strapi.Client
 	port          int
+	WorkerPool    *WorkerPool
 }
 
-func NewApi(c Config, githubClient *github.Client, gptClient *gpt.ChatClient) *App {
+type WorkerPool struct {
+	RepostioryConfigurationCreated chan strapiModels.RepositoryConfiguration
+}
+
+func (a *App) StartWorkerPool() {
+	group := errgroup.Group{}
+	group.limit = 10
+	for repoCreateJob := range a.WorkerPool.RepostioryConfigurationCreated {
+		repoCreateJob := repoCreateJob
+		group.Go(func() error {
+			return a.HandleRepositoryConfigurationCreatedJob(repoCreateJob)
+		})
+	}
+
+}
+
+func NewApi(c Config, githubClient *github.Client, gptClient *gpt.ChatClient, strapiClient *strapi.Client) *App {
 	return &App{
 		server: gin.Default(),
 
 		githubClient:  githubClient,
 		chatGptClient: gptClient,
+		strapiClient:  strapiClient,
 		port:          c.Port,
+		WorkerPool: &WorkerPool{
+			RepostioryConfigurationCreated: make(chan strapiModels.RepositoryConfiguration),
+		},
 	}
 }
 

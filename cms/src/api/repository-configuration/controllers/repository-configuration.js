@@ -184,7 +184,12 @@ module.exports = createCoreController(
     async internalFind(ctx) {
       const id = ctx.params.id;
       const repositoryConfiguration = await strapi.entityService
-        .findOne("api::repository-configuration.repository-configuration", id)
+        .findOne("api::repository-configuration.repository-configuration", id, {
+          populate: {
+            installation: true,
+            repository: true,
+          },
+        })
         .catch((err) => {
           console.log(err);
           throw err;
