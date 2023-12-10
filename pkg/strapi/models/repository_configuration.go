@@ -7,20 +7,21 @@ type RepositoryConfiguration struct {
 	LastGeneration *time.Time    `json:"last_generation"`
 	Private        bool          `json:"private"`
 	Cron           string        `json:"cron"`
-	CreatedAt      time.Time     `json:"createdAt"`
-	UpdatedAt      time.Time     `json:"updatedAt"`
+	NextGeneration *time.Time    `json:"next_generation"`
+	CreatedAt      *time.Time    `json:"createdAt"`
+	UpdatedAt      *time.Time    `json:"updatedAt"`
 	Repository     *Repository   `json:"repository"`
 	Installation   *Installation `json:"installation"`
 }
 
 type Repository struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
-	FullName     string    `json:"full_name"`
-	Private      bool      `json:"private"`
-	RepositoryID string    `json:"repository_id"`
+	ID           int        `json:"id"`
+	Name         string     `json:"name"`
+	CreatedAt    *time.Time `json:"createdAt"`
+	UpdatedAt    *time.Time `json:"updatedAt"`
+	FullName     string     `json:"full_name"`
+	Private      bool       `json:"private"`
+	RepositoryID string     `json:"repository_id"`
 }
 
 type Installation struct {

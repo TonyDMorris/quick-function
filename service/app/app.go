@@ -5,12 +5,17 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	gpt "github.com/TonyDMorris/quick-function/pkg/gpt/client"
+	"github.com/TonyDMorris/quick-function/pkg/logging"
 	strapi "github.com/TonyDMorris/quick-function/pkg/strapi/client"
 	strapiModels "github.com/TonyDMorris/quick-function/pkg/strapi/models"
 	"github.com/gin-gonic/gin"
+	"github.com/go-co-op/gocron"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/google/go-github/v56/github"
@@ -25,24 +30,119 @@ type App struct {
 	githubClient  *github.Client
 	chatGptClient *gpt.ChatClient
 	strapiClient  *strapi.Client
+	cron          *gocron.Scheduler
+	jobs          map[string]*gocron.Job
 	port          int
 	WorkerPool    *WorkerPool
 }
 
 type WorkerPool struct {
-	RepostioryConfigurationCreated chan strapiModels.RepositoryConfiguration
+	RepostioryConfigurationCreated   chan strapiModels.RepositoryConfiguration
+	RepositoryConfigurationScheduled chan strapiModels.RepositoryConfiguration
 }
 
-func (a *App) StartWorkerPool() {
-	group := errgroup.Group{}
-	group.limit = 10
-	for repoCreateJob := range a.WorkerPool.RepostioryConfigurationCreated {
-		repoCreateJob := repoCreateJob
-		group.Go(func() error {
-			return a.HandleRepositoryConfigurationCreatedJob(repoCreateJob)
-		})
+func (a *App) startWorkerPool() {
+
+	go func() {
+		group := errgroup.Group{}
+		group.SetLimit(10)
+		for repoCreateJob := range a.WorkerPool.RepostioryConfigurationCreated {
+			repoCreateJob := repoCreateJob
+			group.Go(func() error {
+				err := a.HandleRepositoryConfigurationCreatedJob(repoCreateJob)
+				if err != nil {
+					logging.Logger.Error("error handling repository configuration created job", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+				}
+				return nil
+			})
+		}
+	}()
+	go func() {
+		group := errgroup.Group{}
+		group.SetLimit(10)
+		for repoCreateJob := range a.WorkerPool.RepositoryConfigurationScheduled {
+			repoCreateJob := repoCreateJob
+			group.Go(func() error {
+				err := a.HandleRepositoryConfigurationScheduledJob(repoCreateJob)
+				if err != nil {
+					logging.Logger.Error("error handling repository configuration created job", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+				}
+				return nil
+			})
+		}
+	}()
+
+}
+
+func (a *App) loadSchedules() error {
+	repositoryConfigurations, err := a.strapiClient.GetRepositoryConfigurations()
+	if err != nil {
+		return fmt.Errorf("error getting repository configurations: %w", err)
 	}
 
+	for _, repositoryConfiguration := range repositoryConfigurations {
+		if repositoryConfiguration.Cron != "" && repositoryConfiguration.NextGeneration != nil {
+			fullRepositoryConfiguration, err := a.strapiClient.GetRepositoryConfiguration(repositoryConfiguration.ID)
+			if err != nil {
+				return fmt.Errorf("error getting repository configuration: %w", err)
+			}
+
+			scheduleStrings := strings.Split(repositoryConfiguration.Cron, " ")
+			numberString, interval := scheduleStrings[0], scheduleStrings[1]
+			number, err := strconv.Atoi(numberString)
+			if err != nil {
+				return fmt.Errorf("error converting string to number: %w", err)
+			}
+			switch interval {
+			case "days":
+				job, err := a.cron.
+					Every(uint64(number)).
+					Day().
+					Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
+					StartAt(*fullRepositoryConfiguration.NextGeneration).
+					Do(func() {
+						a.WorkerPool.RepostioryConfigurationCreated <- *fullRepositoryConfiguration
+					})
+				if err != nil {
+					return fmt.Errorf("error scheduling job: %w", err)
+				}
+				a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
+				nextRun := job.NextRun()
+				repositoryConfiguration.NextGeneration = &nextRun
+				_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
+				if err != nil {
+					return fmt.Errorf("error updating repository configuration: %w", err)
+				}
+
+			case "weeks":
+				job, err := a.cron.
+					Every(uint64(number)).
+					Week().
+					Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
+					StartAt(*fullRepositoryConfiguration.NextGeneration).
+					Do(func() {
+						a.WorkerPool.RepostioryConfigurationCreated <- *fullRepositoryConfiguration
+					})
+				if err != nil {
+					return fmt.Errorf("error scheduling job: %w", err)
+				}
+				a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
+				nextRun := job.NextRun()
+				repositoryConfiguration.NextGeneration = &nextRun
+				_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
+				if err != nil {
+					return fmt.Errorf("error updating repository configuration: %w", err)
+				}
+
+			default:
+				return fmt.Errorf("invalid interval: %s", interval)
+
+			}
+
+		}
+	}
+
+	return nil
 }
 
 func NewApi(c Config, githubClient *github.Client, gptClient *gpt.ChatClient, strapiClient *strapi.Client) *App {
@@ -53,6 +153,8 @@ func NewApi(c Config, githubClient *github.Client, gptClient *gpt.ChatClient, st
 		chatGptClient: gptClient,
 		strapiClient:  strapiClient,
 		port:          c.Port,
+		cron:          gocron.NewScheduler(time.UTC),
+		jobs:          make(map[string]*gocron.Job),
 		WorkerPool: &WorkerPool{
 			RepostioryConfigurationCreated: make(chan strapiModels.RepositoryConfiguration),
 		},

@@ -1,14 +1,13 @@
-FROM --platform=linux/amd64  go:latest
-
-
-WORKDIR /app
-
-COPY . .
-
+FROM  golang:alpine AS base
+WORKDIR /go/quick-function
+COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
+COPY . ./
 
-RUN go build -o main .
 
-EXPOSE 8080
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /run_api ./cmd/run_api
 
-CMD ["./main"]
+FROM alpine:latest
+COPY --from=base /run_api /app
+ENTRYPOINT [ "/app" ]

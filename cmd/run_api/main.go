@@ -12,6 +12,7 @@ import (
 	"github.com/caarlos0/env/v10"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/go-github/v56/github"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/joho/godotenv"
 )
 
@@ -42,8 +43,8 @@ func main() {
 		logging.Logger.Error(err.Error())
 		os.Exit(1)
 	}
-
-	itr := ghinstallation.NewAppsTransportFromPrivateKey(http.DefaultTransport, config.AppID, key)
+	trns := retryablehttp.NewClient().HTTPClient.Transport
+	itr := ghinstallation.NewAppsTransportFromPrivateKey(trns, config.AppID, key)
 
 	client := github.NewClient(&http.Client{
 		Transport: itr,
