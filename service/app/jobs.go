@@ -123,7 +123,18 @@ func (a *App) HandleRepositoryConfigurationCreatedJob(job strapiModels.Repositor
 
 	}
 
-	logging.Logger.Info(content)
+	gitBlogPost := strapiModels.GitBlogPost{
+		Title:         repo.Name,
+		Description:   repo.Name,
+		Body:          content,
+		Repository:    fmt.Sprint(repo.ID),
+		OwnerUsername: installation.Username,
+	}
+
+	_, err = a.strapiClient.StandardCreateGitBlogPost(gitBlogPost)
+	if err != nil {
+		return fmt.Errorf("error creating git blog post: %w", err)
+	}
 
 	// trim content
 
@@ -132,6 +143,7 @@ func (a *App) HandleRepositoryConfigurationCreatedJob(job strapiModels.Repositor
 }
 
 func (a *App) HandleRepositoryConfigurationScheduledJob(job strapiModels.RepositoryConfiguration) error {
+	logging.Logger.Info(fmt.Sprintf("handling scheduled job for repository configuration: %d", job.ID))
 
 	defer func() {
 		if err := recover(); err != nil {

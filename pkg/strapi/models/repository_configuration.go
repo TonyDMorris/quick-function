@@ -8,8 +8,6 @@ type RepositoryConfiguration struct {
 	Private        bool          `json:"private"`
 	Cron           string        `json:"cron"`
 	NextGeneration *time.Time    `json:"next_generation"`
-	CreatedAt      *time.Time    `json:"createdAt"`
-	UpdatedAt      *time.Time    `json:"updatedAt"`
 	Repository     *Repository   `json:"repository"`
 	Installation   *Installation `json:"installation"`
 }
@@ -25,11 +23,9 @@ type Repository struct {
 }
 
 type Installation struct {
-	ID             int       `json:"id"`
-	InstallationID string    `json:"installation_id"`
-	Username       string    `json:"username"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	ID             int    `json:"id"`
+	InstallationID string `json:"installation_id"`
+	Username       string `json:"username"`
 }
 
 type Count struct {

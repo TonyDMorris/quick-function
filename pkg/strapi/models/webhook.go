@@ -9,3 +9,7 @@ type StrapiWebhookPayload struct {
 	UID       string      `json:"uid"`
 	Entry     interface{} `json:"entry"`
 }
+
+type Carrier struct {
+	Data interface{} `json:"data"`
+}

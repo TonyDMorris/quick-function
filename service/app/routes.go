@@ -14,5 +14,6 @@ func (a *App) Run() error {
 func (a *App) setupRoutes() {
 
 	a.server.POST("/repository-configuration", a.HandleStrapiWebhook)
+	a.server.GET("/jobs", a.HandleGetJobs)
 
 }

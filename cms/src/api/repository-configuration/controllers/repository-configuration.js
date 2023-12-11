@@ -221,6 +221,7 @@ module.exports = createCoreController(
     },
     async internalUpdate(ctx) {
       const id = ctx.params.id;
+      console.log(ctx.request.body);
       const repositoryConfiguration = await strapi.entityService
         .update(
           "api::repository-configuration.repository-configuration",

@@ -81,68 +81,85 @@ func (a *App) loadSchedules() error {
 	}
 
 	for _, repositoryConfiguration := range repositoryConfigurations {
-		if repositoryConfiguration.Cron != "" && repositoryConfiguration.NextGeneration != nil {
-			fullRepositoryConfiguration, err := a.strapiClient.GetRepositoryConfiguration(repositoryConfiguration.ID)
+
+		if repositoryConfiguration.Cron == "" || repositoryConfiguration.NextGeneration == nil {
+			continue
+		}
+		logging.Logger.Info(fmt.Sprintf("scheduling job for repository configuration: %d", repositoryConfiguration.ID))
+		fullRepositoryConfiguration, err := a.strapiClient.GetRepositoryConfiguration(repositoryConfiguration.ID)
+		if err != nil {
+			return fmt.Errorf("error getting repository configuration: %w", err)
+		}
+
+		scheduleStrings := strings.Split(repositoryConfiguration.Cron, " ")
+		numberString, interval := scheduleStrings[0], scheduleStrings[1]
+		number, err := strconv.Atoi(numberString)
+		if err != nil {
+			return fmt.Errorf("error converting string to number: %w", err)
+		}
+		switch interval {
+		case "days":
+			job, err := a.cron.
+				Every(int(number)).
+				Day().
+				Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
+				StartAt(*fullRepositoryConfiguration.NextGeneration).
+				Do(func() {
+					a.WorkerPool.RepositoryConfigurationScheduled <- *fullRepositoryConfiguration
+				})
 			if err != nil {
-				return fmt.Errorf("error getting repository configuration: %w", err)
+				return fmt.Errorf("error scheduling job: %w", err)
 			}
-
-			scheduleStrings := strings.Split(repositoryConfiguration.Cron, " ")
-			numberString, interval := scheduleStrings[0], scheduleStrings[1]
-			number, err := strconv.Atoi(numberString)
+			a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
+			nextRun := job.NextRun()
+			repositoryConfiguration.NextGeneration = &nextRun
+			_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
 			if err != nil {
-				return fmt.Errorf("error converting string to number: %w", err)
+				return fmt.Errorf("error updating repository configuration: %w", err)
 			}
-			switch interval {
-			case "days":
-				job, err := a.cron.
-					Every(uint64(number)).
-					Day().
-					Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
-					StartAt(*fullRepositoryConfiguration.NextGeneration).
-					Do(func() {
-						a.WorkerPool.RepostioryConfigurationCreated <- *fullRepositoryConfiguration
-					})
-				if err != nil {
-					return fmt.Errorf("error scheduling job: %w", err)
-				}
-				a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
-				nextRun := job.NextRun()
-				repositoryConfiguration.NextGeneration = &nextRun
-				_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
-				if err != nil {
-					return fmt.Errorf("error updating repository configuration: %w", err)
-				}
 
-			case "weeks":
-				job, err := a.cron.
-					Every(uint64(number)).
-					Week().
-					Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
-					StartAt(*fullRepositoryConfiguration.NextGeneration).
-					Do(func() {
-						a.WorkerPool.RepostioryConfigurationCreated <- *fullRepositoryConfiguration
-					})
-				if err != nil {
-					return fmt.Errorf("error scheduling job: %w", err)
-				}
-				a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
-				nextRun := job.NextRun()
-				repositoryConfiguration.NextGeneration = &nextRun
-				_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
-				if err != nil {
-					return fmt.Errorf("error updating repository configuration: %w", err)
-				}
-
-			default:
-				return fmt.Errorf("invalid interval: %s", interval)
-
+		case "weeks":
+			job, err := a.cron.
+				Every(int(number)).
+				Week().
+				Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
+				StartAt(*fullRepositoryConfiguration.NextGeneration).
+				Do(func() {
+					a.WorkerPool.RepositoryConfigurationScheduled <- *fullRepositoryConfiguration
+				})
+			if err != nil {
+				return fmt.Errorf("error scheduling job: %w", err)
 			}
+			a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
+			nextRun := job.NextRun()
+			repositoryConfiguration.NextGeneration = &nextRun
+			_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
+			if err != nil {
+				return fmt.Errorf("error updating repository configuration: %w", err)
+			}
+
+		default:
+			return fmt.Errorf("invalid interval: %s", interval)
 
 		}
+
 	}
 
 	return nil
+}
+
+func (a *App) HandleGetJobs(c *gin.Context) {
+	var resp []map[string]interface{}
+
+	for _, job := range a.jobs {
+		resp = append(resp, map[string]interface{}{
+			"next_run": job.NextRun(),
+			"tags":     job.Tags(),
+			"name":     job.GetName(),
+		})
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 func NewApi(c Config, githubClient *github.Client, gptClient *gpt.ChatClient, strapiClient *strapi.Client) *App {

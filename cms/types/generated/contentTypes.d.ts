@@ -362,159 +362,6 @@ export interface AdminTransferTokenPermission extends Schema.CollectionType {
   };
 }
 
-export interface ApiGitBlogPostGitBlogPost extends Schema.CollectionType {
-  collectionName: 'git_blog_posts';
-  info: {
-    singularName: 'git-blog-post';
-    pluralName: 'git-blog-posts';
-    displayName: 'git-blog-post';
-    description: '';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    title: Attribute.String;
-    body: Attribute.RichText;
-    commit_from: Attribute.DateTime;
-    commit_to: Attribute.DateTime;
-    description: Attribute.String;
-    owner_username: Attribute.String;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::git-blog-post.git-blog-post',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::git-blog-post.git-blog-post',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
-export interface ApiInstallationInstallation extends Schema.CollectionType {
-  collectionName: 'installations';
-  info: {
-    singularName: 'installation';
-    pluralName: 'installations';
-    displayName: 'installation';
-    description: '';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    installation_id: Attribute.UID & Attribute.Required;
-    repositories: Attribute.Relation<
-      'api::installation.installation',
-      'oneToMany',
-      'api::repository.repository'
-    >;
-    username: Attribute.String;
-    repository_configurations: Attribute.Relation<
-      'api::installation.installation',
-      'oneToMany',
-      'api::repository-configuration.repository-configuration'
-    >;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::installation.installation',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::installation.installation',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
-export interface ApiRepositoryRepository extends Schema.CollectionType {
-  collectionName: 'repositories';
-  info: {
-    singularName: 'repository';
-    pluralName: 'repositories';
-    displayName: 'repository';
-    description: '';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    name: Attribute.String;
-    full_name: Attribute.String;
-    private: Attribute.Boolean;
-    repository_id: Attribute.UID & Attribute.Required;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::repository.repository',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::repository.repository',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
-export interface ApiRepositoryConfigurationRepositoryConfiguration
-  extends Schema.CollectionType {
-  collectionName: 'repository_configurations';
-  info: {
-    singularName: 'repository-configuration';
-    pluralName: 'repository-configurations';
-    displayName: 'repository_configuration';
-    description: '';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    last_generation: Attribute.DateTime;
-    repository: Attribute.Relation<
-      'api::repository-configuration.repository-configuration',
-      'oneToOne',
-      'api::repository.repository'
-    >;
-    private: Attribute.Boolean & Attribute.DefaultTo<true>;
-    installation: Attribute.Relation<
-      'api::repository-configuration.repository-configuration',
-      'manyToOne',
-      'api::installation.installation'
-    >;
-    cron: Attribute.String;
-    next_generation: Attribute.DateTime;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::repository-configuration.repository-configuration',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::repository-configuration.repository-configuration',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
 export interface PluginUploadFile extends Schema.CollectionType {
   collectionName: 'files';
   info: {
@@ -829,6 +676,159 @@ export interface PluginI18NLocale extends Schema.CollectionType {
   };
 }
 
+export interface ApiGitBlogPostGitBlogPost extends Schema.CollectionType {
+  collectionName: 'git_blog_posts';
+  info: {
+    singularName: 'git-blog-post';
+    pluralName: 'git-blog-posts';
+    displayName: 'git-blog-post';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    title: Attribute.String;
+    body: Attribute.RichText;
+    commit_from: Attribute.DateTime;
+    commit_to: Attribute.DateTime;
+    description: Attribute.String;
+    owner_username: Attribute.String;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::git-blog-post.git-blog-post',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::git-blog-post.git-blog-post',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiInstallationInstallation extends Schema.CollectionType {
+  collectionName: 'installations';
+  info: {
+    singularName: 'installation';
+    pluralName: 'installations';
+    displayName: 'installation';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    installation_id: Attribute.UID & Attribute.Required;
+    repositories: Attribute.Relation<
+      'api::installation.installation',
+      'oneToMany',
+      'api::repository.repository'
+    >;
+    username: Attribute.String;
+    repository_configurations: Attribute.Relation<
+      'api::installation.installation',
+      'oneToMany',
+      'api::repository-configuration.repository-configuration'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::installation.installation',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::installation.installation',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiRepositoryRepository extends Schema.CollectionType {
+  collectionName: 'repositories';
+  info: {
+    singularName: 'repository';
+    pluralName: 'repositories';
+    displayName: 'repository';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    name: Attribute.String;
+    full_name: Attribute.String;
+    private: Attribute.Boolean;
+    repository_id: Attribute.UID & Attribute.Required;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::repository.repository',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::repository.repository',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiRepositoryConfigurationRepositoryConfiguration
+  extends Schema.CollectionType {
+  collectionName: 'repository_configurations';
+  info: {
+    singularName: 'repository-configuration';
+    pluralName: 'repository-configurations';
+    displayName: 'repository_configuration';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    last_generation: Attribute.DateTime;
+    repository: Attribute.Relation<
+      'api::repository-configuration.repository-configuration',
+      'oneToOne',
+      'api::repository.repository'
+    >;
+    private: Attribute.Boolean & Attribute.DefaultTo<true>;
+    installation: Attribute.Relation<
+      'api::repository-configuration.repository-configuration',
+      'manyToOne',
+      'api::installation.installation'
+    >;
+    cron: Attribute.String;
+    next_generation: Attribute.DateTime;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::repository-configuration.repository-configuration',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::repository-configuration.repository-configuration',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 declare module '@strapi/types' {
   export module Shared {
     export interface ContentTypes {
@@ -839,16 +839,16 @@ declare module '@strapi/types' {
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
-      'api::git-blog-post.git-blog-post': ApiGitBlogPostGitBlogPost;
-      'api::installation.installation': ApiInstallationInstallation;
-      'api::repository.repository': ApiRepositoryRepository;
-      'api::repository-configuration.repository-configuration': ApiRepositoryConfigurationRepositoryConfiguration;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'plugin::i18n.locale': PluginI18NLocale;
+      'api::git-blog-post.git-blog-post': ApiGitBlogPostGitBlogPost;
+      'api::installation.installation': ApiInstallationInstallation;
+      'api::repository.repository': ApiRepositoryRepository;
+      'api::repository-configuration.repository-configuration': ApiRepositoryConfigurationRepositoryConfiguration;
     }
   }
 }
