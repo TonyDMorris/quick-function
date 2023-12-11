@@ -204,5 +204,42 @@ module.exports = createCoreController(
 
       return repositoryConfiguration;
     },
+    async internalFindMany(ctx) {
+      const repositoryConfigurations = await strapi.entityService
+        .findMany("api::repository-configuration.repository-configuration", {
+          populate: {
+            installation: true,
+            repository: true,
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+          throw err;
+        });
+
+      return repositoryConfigurations;
+    },
+    async internalUpdate(ctx) {
+      const id = ctx.params.id;
+      const repositoryConfiguration = await strapi.entityService
+        .update(
+          "api::repository-configuration.repository-configuration",
+          id,
+          ctx.request.body
+        )
+        .catch((err) => {
+          console.log(err);
+          throw err;
+        });
+
+      if (!repositoryConfiguration) {
+        return {
+          success: false,
+          message: "Repository configuration not found",
+        };
+      }
+
+      return repositoryConfiguration;
+    },
   })
 );

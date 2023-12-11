@@ -15,14 +15,8 @@
     "title": {
       "type": "string"
     },
-    "body_blocks": {
-      "type": "blocks"
-    },
     "body": {
       "type": "richtext"
-    },
-    "additional_data": {
-      "type": "json"
     },
     "commit_from": {
       "type": "datetime"
@@ -30,11 +24,11 @@
     "commit_to": {
       "type": "datetime"
     },
-    "repository": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::repository.repository",
-      "inversedBy": "git_blog_posts"
+    "description": {
+      "type": "string"
+    },
+    "owner_username": {
+      "type": "string"
     }
   }
 }

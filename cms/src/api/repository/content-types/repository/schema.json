@@ -15,12 +15,6 @@
     "name": {
       "type": "string"
     },
-    "git_blog_posts": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::git-blog-post.git-blog-post",
-      "mappedBy": "repository"
-    },
     "full_name": {
       "type": "string"
     },

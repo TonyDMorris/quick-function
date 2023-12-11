@@ -11,5 +11,23 @@ module.exports = {
         middlewares: [],
       },
     },
+    {
+      method: "GET",
+      path: "/internal/repository-configurations",
+      handler: "repository-configuration.internalFindMany",
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: "PUT",
+      path: "/internal/repository-configurations/:id",
+      handler: "repository-configuration.internalUpdate",
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

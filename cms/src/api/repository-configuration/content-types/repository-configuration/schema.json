@@ -32,6 +32,9 @@
     },
     "cron": {
       "type": "string"
+    },
+    "next_generation": {
+      "type": "datetime"
     }
   }
 }
