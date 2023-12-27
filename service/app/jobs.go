@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/TonyDMorris/quick-function/constants"
 	gpt "github.com/TonyDMorris/quick-function/pkg/gpt/client"
@@ -143,13 +144,117 @@ func (a *App) HandleRepositoryConfigurationCreatedJob(job strapiModels.Repositor
 }
 
 func (a *App) HandleRepositoryConfigurationScheduledJob(job strapiModels.RepositoryConfiguration) error {
-	logging.Logger.Info(fmt.Sprintf("handling scheduled job for repository configuration: %d", job.ID))
+	logging.Logger.Info(fmt.Sprintf("handling scheduled job for repository configuration: %d, with last generation time: %s", job.ID, job.LastGeneration.Format(time.RFC3339)))
 
 	defer func() {
 		if err := recover(); err != nil {
-			logging.Logger.Error("panic in HandleRepositoryConfigurationScheduledJob", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err}, zapcore.Field{Key: "job", Type: zapcore.Int64Type, Interface: job.ID})
+			logging.Logger.Error(fmt.Sprintf("panic in HandleRepositoryConfigurationScheduledJob: %q with job ID : %d", err, job.ID))
 		}
 	}()
+
+	ctx := context.Background()
+
+	installation := job.Installation
+	repo := job.Repository
+
+	if installation == nil || repo == nil {
+		return fmt.Errorf("installation or repository is nil")
+	}
+
+	installationID := installation.InstallationID
+
+	userClient, err := a.getUserClientFromInstallation(ctx, installationID)
+	if err != nil {
+		return fmt.Errorf("error getting user client from installation: %w", err)
+	}
+
+	repoinfo, _, err := userClient.Repositories.Get(ctx, installation.Username, repo.Name)
+	if err != nil {
+		return fmt.Errorf("error getting repository info: %w", err)
+	}
+
+	defaultBranch := repoinfo.GetDefaultBranch()
+
+	tree, _, err := userClient.Git.GetTree(ctx, installation.Username, repo.Name, defaultBranch, true)
+	if err != nil {
+		return fmt.Errorf("error getting tree: %w", err)
+	}
+
+	var files []string
+
+	for _, entry := range tree.Entries {
+		if entry.GetSize() != 0 {
+			files = append(files, entry.GetPath())
+		}
+
+	}
+
+	if len(files) == 0 {
+
+		return fmt.Errorf("no files found")
+
+	}
+
+	// get commit hashes from latest and last generation
+	commitRefs, _, err := userClient.Repositories.ListCommits(ctx, installation.Username, repo.Name, &github.CommitsListOptions{
+		SHA:   defaultBranch,
+		Since: *job.LastGeneration,
+	})
+	if err != nil {
+		return fmt.Errorf("error getting commits: %w", err)
+	}
+
+	// get contents since last generation
+
+	if len(commitRefs) < 2 {
+		logging.Logger.Info(fmt.Sprintf("no commits found since last generation: %s, for job ID : %d", job.LastGeneration.String(), job.ID))
+		return nil
+	}
+
+	// get diff between commits
+
+	diff, _, err := userClient.Repositories.CompareCommits(ctx, installation.Username, repo.Name, commitRefs[0].GetSHA(), commitRefs[len(commitRefs)-1].GetSHA(), nil)
+	if err != nil {
+		return fmt.Errorf("error getting diff: %w", err)
+	}
+
+	// get interested files from diff
+
+	for _, file := range diff.Files {
+		files = append(files, file.GetFilename())
+	}
+	// get all commit messages
+	var commitMessages []string
+	var filesChanged []string
+
+	for _, commitRef := range commitRefs {
+		commit := commitRef.GetCommit()
+		commitMessages = append(commitMessages, commit.GetMessage())
+
+	}
+
+	commitMessage := strings.Join(commitMessages, "\n")
+
+	// get all file names of changed files
+
+	filesChangesString := strings.Join(filesChanged, "\n")
+
+	logging.Logger.Info(fmt.Sprintf("files changed since last generation: %s, for job ID : %d", filesChangesString, job.ID))
+
+	logging.Logger.Info(fmt.Sprintf("commit messages since last generation: %s, for job ID : %d", commitMessage, job.ID))
+
+	// if contents are the same, return
+
+	// if contents are different, get interested files
+
+	// get contents from interested files
+
+	// trim contents
+
+	// send contents to gpt
+
+	// create git blog post
+
 	return nil
 }
 

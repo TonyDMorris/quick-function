@@ -9,7 +9,6 @@ import (
 	"github.com/TonyDMorris/quick-function/pkg/logging"
 	"github.com/TonyDMorris/quick-function/pkg/strapi/models"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap/zapcore"
 )
 
 func (a *App) HandleStrapiWebhook(c *gin.Context) {
@@ -17,7 +16,7 @@ func (a *App) HandleStrapiWebhook(c *gin.Context) {
 	var webhook models.StrapiWebhookPayload
 
 	if err := c.BindJSON(&webhook); err != nil {
-		logging.Logger.Error("Error handling repository configuration", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+		logging.Logger.Error(fmt.Sprintf("Error handling repository configuration with error : %q", err))
 		c.JSON(500, gin.H{
 			"error": err.Error(),
 		})
@@ -27,7 +26,7 @@ func (a *App) HandleStrapiWebhook(c *gin.Context) {
 	switch webhook.Model {
 	case "repository-configuration":
 		if err := a.handleRepositoryConfiguration(webhook); err != nil {
-			logging.Logger.Error("Error handling repository configuration", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+			logging.Logger.Error(fmt.Sprintf("Error handling repository configuration with error :%q", err))
 			c.JSON(500, gin.H{
 				"error": err.Error(),
 			})
@@ -66,6 +65,9 @@ func (a *App) handleRepositoryConfiguration(webhook models.StrapiWebhookPayload)
 		}
 
 		scheduleStrings := strings.Split(repositoryConfiguration.Cron, " ")
+		if len(scheduleStrings) != 2 {
+			return fmt.Errorf("error reading cron '%s'", fullRepositoryConfiguration.Cron)
+		}
 		numberString, interval := scheduleStrings[0], scheduleStrings[1]
 		number, err := strconv.Atoi(numberString)
 		if err != nil {
@@ -74,7 +76,7 @@ func (a *App) handleRepositoryConfiguration(webhook models.StrapiWebhookPayload)
 		switch interval {
 		case "days":
 			job, err := a.cron.
-				Every(uint64(number)).
+				Every(int(number)).
 				Day().
 				Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
 				WaitForSchedule().
@@ -86,15 +88,15 @@ func (a *App) handleRepositoryConfiguration(webhook models.StrapiWebhookPayload)
 			}
 			a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
 			nextRun := job.NextRun()
-			repositoryConfiguration.NextGeneration = &nextRun
-			_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
+			fullRepositoryConfiguration.NextGeneration = &nextRun
+			_, err = a.strapiClient.UpdateRepositoryConfiguration(*fullRepositoryConfiguration)
 			if err != nil {
 				return fmt.Errorf("error updating repository configuration: %w", err)
 			}
 
 		case "weeks":
 			job, err := a.cron.
-				Every(uint64(number)).
+				Every(int(number)).
 				Week().
 				Tag(fmt.Sprint(fullRepositoryConfiguration.ID)).
 				WaitForSchedule().
@@ -106,8 +108,8 @@ func (a *App) handleRepositoryConfiguration(webhook models.StrapiWebhookPayload)
 			}
 			a.jobs[fmt.Sprint(fullRepositoryConfiguration.ID)] = job
 			nextRun := job.NextRun()
-			repositoryConfiguration.NextGeneration = &nextRun
-			_, err = a.strapiClient.UpdateRepositoryConfiguration(repositoryConfiguration)
+			fullRepositoryConfiguration.NextGeneration = &nextRun
+			_, err = a.strapiClient.UpdateRepositoryConfiguration(*fullRepositoryConfiguration)
 			if err != nil {
 				return fmt.Errorf("error updating repository configuration: %w", err)
 			}
